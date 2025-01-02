@@ -1,0 +1,20 @@
+{
+  "name": "whatsapp-chat-viewer",
+  "version": "1.0.0",
+  "description": "A web-based WhatsApp chat viewer",
+  "main": "index.html",
+  "scripts": {
+    "start": "live-server --port=8080 --host=localhost --entry-file=index.html",
+    "dev": "npm start"
+  },
+  "keywords": [
+    "whatsapp",
+    "chat",
+    "viewer"
+  ],
+  "author": "Elad Moshe",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}

@@ -62,6 +62,27 @@ To add or modify functionality:
 
 1. Edit the `script.js` file to add new features or change existing behavior.
 
+## Development
+
+To set up the development environment:
+
+1. Make sure you have [Node.js](https://nodejs.org/) installed.
+2. Clone the repository:
+   ```
+   git clone https://github.com/eladmoshe/WhatsAppViewer.git
+   cd WhatsAppViewer
+   ```
+3. Install the dependencies:
+   ```
+   npm install
+   ```
+4. Start the development server:
+   ```
+   npm run dev
+   ```
+
+The development server will start at `http://localhost:8080`. The page will automatically reload when you make changes to the project files.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
