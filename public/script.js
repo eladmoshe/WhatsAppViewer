@@ -1,98 +1,124 @@
-import JSZip from 'jszip';
-
 let messages = [];
 let mediaFiles = {};
 
-window.addEventListener('load', () => {
-    loadSavedUrl();
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('zipFile');
+    fileInput.addEventListener('change', loadZipFile);
 });
 
-function loadSavedUrl() {
-    const savedUrl = localStorage.getItem('driveUrl');
-    if (savedUrl) {
-        document.getElementById('driveUrl').value = savedUrl;
-        loadChatData();
-    }
-}
-
-function saveUrl() {
-    const url = document.getElementById('driveUrl').value;
-    localStorage.setItem('driveUrl', url);
-    loadChatData();
-}
-
-function loadChatData() {
-    const url = document.getElementById('driveUrl').value;
-    if (url) {
-        console.log("Attempting to fetch URL:", url);
-        fetch(`/proxy?url=${encodeURIComponent(url)}`)
-            .then(response => {
-                console.log("Response status:", response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+async function loadZipFile(event) {
+    console.log("loadZipFile function called");
+    const file = event.target.files[0];
+    if (file) {
+        console.log("File selected:", file.name);
+        try {
+            const zip = new JSZip();
+            console.log("Loading zip file...");
+            
+            // Show progress bar
+            const progressBarContainer = document.getElementById('progressBarContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            progressBarContainer.style.display = 'block';
+            
+            const contents = await zip.loadAsync(file, {
+                onprogress: (metadata) => {
+                    const percent = Math.round(metadata.percent);
+                    progressBar.value = percent;
+                    progressText.textContent = percent + '%';
                 }
-                return response.text();
-            })
-            .then(data => {
-                console.log("Received data:", data.substring(0, 100) + "..."); // Log first 100 characters
-                if (data.startsWith('<!DOCTYPE html>')) {
-                    throw new Error('Received HTML instead of chat data. Make sure the file is publicly accessible.');
-                }
-                messages = parseWhatsAppChat(data);
-                console.log("Parsed messages:", messages.length);
-                renderMessages();
-            })
-            .catch(error => {
-                console.error("Error loading chat data:", error);
-                alert("שגיאה בטעינת הנתונים: " + error.message);
             });
+            console.log("Zip file loaded successfully");
+            
+            let chatFileContent = '';
+            let totalFiles = Object.keys(contents.files).length;
+            let processedFiles = 0;
+            
+            console.log("Files in the zip:", Object.keys(contents.files));
+            
+            for (const [filename, zipEntry] of Object.entries(contents.files)) {
+                console.log("Processing file:", filename);
+                if (filename === '_chat.txt') {
+                    console.log("Found _chat.txt, loading content...");
+                    chatFileContent = await zipEntry.async('string');
+                    console.log("Chat content loaded, length:", chatFileContent.length);
+                } else if (filename.endsWith('.jpg') || filename.endsWith('.png') || filename.endsWith('.gif')) {
+                    // Load images in the background
+                    loadImageInBackground(filename, zipEntry);
+                }
+                processedFiles++;
+                const percent = Math.round((processedFiles / totalFiles) * 100);
+                progressBar.value = percent;
+                progressText.textContent = percent + '%';
+            }
+            
+            if (chatFileContent) {
+                console.log("Chat content sample:", chatFileContent.substring(0, 200));
+                console.log("Parsing chat content...");
+                messages = parseMessages(chatFileContent);
+                console.log("Parsed messages count:", messages.length);
+                console.log("First 5 parsed messages:", messages.slice(0, 5));
+                console.log("Rendering messages...");
+                renderMessages();
+            } else {
+                console.error("No _chat.txt file found in the zip");
+                throw new Error('No _chat.txt file found in the zip');
+            }
+            
+            // Hide progress bar
+            progressBarContainer.style.display = 'none';
+        } catch (error) {
+            console.error('Error processing zip file:', error);
+            alert('Error loading ZIP file: ' + error.message);
+        }
     } else {
-        alert("אנא הכנס קישור לקובץ Google Drive.");
+        console.log("No file selected");
+        alert('Please select a ZIP file');
     }
 }
 
-function parseWhatsAppChat(chatText) {
-    console.log("Parsing chat text:", chatText.substring(0, 100) + "..."); // Log first 100 characters
-    const lines = chatText.split('\n');
-    const messages = [];
-    let currentMessage = null;
+function loadImageInBackground(filename, zipEntry) {
+    zipEntry.async('blob').then(blob => {
+        mediaFiles[filename] = URL.createObjectURL(blob);
+    }).catch(error => {
+        console.error("Error loading media file:", filename, error);
+    });
+}
 
-    const dateRegex = /^\[?(\d{1,2}\/\d{1,2}\/\d{2,4},?\s\d{1,2}:\d{2}(?::\d{2})?(?:\s[AP]M)?)\]?\s-\s/;
-    const senderRegex = /^(.*?):\s/;
+function parseMessages(text) {
+    const lines = text.split('\n');
+    const parsedMessages = [];
 
-    lines.forEach(line => {
-        const dateMatch = line.match(dateRegex);
-        if (dateMatch) {
-            if (currentMessage) {
-                messages.push(currentMessage);
-            }
-            const [, datetime] = dateMatch;
-            const remainingContent = line.slice(dateMatch[0].length);
-            const senderMatch = remainingContent.match(senderRegex);
-            let sender = "Unknown";
-            let content = remainingContent;
-            if (senderMatch) {
-                sender = senderMatch[1];
-                content = remainingContent.slice(senderMatch[0].length);
-            }
-            currentMessage = { datetime, sender, content };
-        } else if (currentMessage) {
-            currentMessage.content += '\n' + line;
+    lines.forEach((line, index) => {
+        const match = line.match(/^\[(\d{2}\/\d{2}\/\d{4},\s\d{1,2}:\d{2}:\d{2})\]\s(.+?):\s(.+)$/);
+        if (match) {
+            parsedMessages.push({
+                datetime: match[1],
+                sender: match[2].trim(),
+                content: match[3].trim(),
+                type: 'regular'
+            });
+        } else if (line.trim() !== '') {
+            // This might be a system message or other non-standard format
+            parsedMessages.push({
+                datetime: '',
+                sender: 'System',
+                content: line.trim(),
+                type: 'system'
+            });
         }
     });
 
-    if (currentMessage) {
-        messages.push(currentMessage);
-    }
-
-    return messages;
+    console.log("Number of parsed messages:", parsedMessages.length);
+    return parsedMessages;
 }
 
 function renderMessages() {
-    console.log("Rendering messages:", messages.length);
+    console.log("Rendering messages, count:", messages.length);
     const chatContainer = document.getElementById("chatContainer");
     chatContainer.innerHTML = "";
-    messages.forEach((msg) => {
+    messages.forEach((msg, index) => {
+        console.log(`Rendering message ${index + 1}:`, msg);
         const msgDiv = document.createElement("div");
         msgDiv.className = "message";
 
@@ -101,17 +127,19 @@ function renderMessages() {
         timestampDiv.textContent = msg.datetime;
 
         const bubbleDiv = document.createElement("div");
-        bubbleDiv.className = `bubble ${msg.sender === "You" ? "outgoing" : "incoming"}`;
+        bubbleDiv.className = `bubble ${msg.type === 'system' ? "system" : (msg.sender === "You" ? "outgoing" : "incoming")}`;
         
         // Check if the content is an image file
         const imageMatch = msg.content.match(/<attached: (.+)>/);
         if (imageMatch && mediaFiles[imageMatch[1]]) {
+            console.log(`Rendering image for message ${index + 1}:`, imageMatch[1]);
             const img = document.createElement('img');
             img.src = mediaFiles[imageMatch[1]];
             img.alt = 'Attached image';
             img.className = 'attached-image';
             bubbleDiv.appendChild(img);
         } else {
+            // Use textContent to prevent XSS
             bubbleDiv.textContent = msg.content;
         }
 
@@ -120,20 +148,26 @@ function renderMessages() {
         senderDiv.textContent = msg.sender;
 
         msgDiv.appendChild(timestampDiv);
-        msgDiv.appendChild(senderDiv);
+        if (msg.type !== 'system') {
+            msgDiv.appendChild(senderDiv);
+        }
         msgDiv.appendChild(bubbleDiv);
         chatContainer.appendChild(msgDiv);
     });
+    console.log("Finished rendering messages");
 }
 
 function handleSearch() {
+    console.log("Search function called");
     const searchQuery = document.getElementById("searchQuery").value.toLowerCase();
+    console.log("Search query:", searchQuery);
     const messageElements = document.querySelectorAll(".bubble");
     let found = false;
     
-    messageElements.forEach((element) => {
+    messageElements.forEach((element, index) => {
         element.classList.remove("highlight");
         if (element.textContent.toLowerCase().includes(searchQuery)) {
+            console.log(`Match found in message ${index + 1}`);
             element.classList.add("highlight");
             if (!found) {
                 element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -141,41 +175,12 @@ function handleSearch() {
             }
         }
     });
+    
+    console.log("Search completed, matches found:", found);
 }
 
-async function loadZipFile() {
-    const fileInput = document.getElementById('zipFile');
-    const file = fileInput.files[0];
-    if (file) {
-        try {
-            const zip = new JSZip();
-            const contents = await zip.loadAsync(file);
-            
-            let chatFileContent = '';
-            
-            for (const [filename, zipEntry] of Object.entries(contents.files)) {
-                if (filename.endsWith('.txt')) {
-                    chatFileContent = await zipEntry.async('string');
-                } else if (filename.endsWith('.jpg') || filename.endsWith('.png') || filename.endsWith('.gif')) {
-                    const blob = await zipEntry.async('blob');
-                    mediaFiles[filename] = URL.createObjectURL(blob);
-                }
-            }
-            
-            if (chatFileContent) {
-                messages = parseWhatsAppChat(chatFileContent);
-                renderMessages();
-            } else {
-                throw new Error('No chat file found in the zip');
-            }
-        } catch (error) {
-            console.error('Error processing zip file:', error);
-            alert('שגיאה בטעינת קובץ ה-ZIP: ' + error.message);
-        }
-    } else {
-        alert('אנא בחר קובץ ZIP');
-    }
-}
-
-// Make sure to expose the loadZipFile function to the global scope
+// Make sure these functions are in the global scope
 window.loadZipFile = loadZipFile;
+window.handleSearch = handleSearch;
+
+console.log("Script loaded and ready");

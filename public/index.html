@@ -12,13 +12,17 @@
     </div>
     <div class="file-input">
         <input type="file" id="zipFile" accept=".zip">
-        <button onclick="loadZipFile()">טען קובץ ZIP</button>
+    </div>
+    <div id="progressBarContainer" style="display: none;">
+        <progress id="progressBar" value="0" max="100"></progress>
+        <span id="progressText">0%</span>
     </div>
     <div class="search">
         <input type="text" id="searchQuery" placeholder="חפש הודעה">
         <button onclick="handleSearch()">חפש</button>
     </div>
     <div class="chat-container" id="chatContainer"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
