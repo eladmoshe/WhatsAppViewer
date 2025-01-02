@@ -21,7 +21,7 @@ function saveUrl() {
 function loadChatData() {
     const url = document.getElementById('driveUrl').value;
     if (url) {
-        fetch(url)
+        fetch(`/proxy?url=${encodeURIComponent(url)}`)
             .then(response => response.text())
             .then(data => {
                 messages = parseWhatsAppChat(data);

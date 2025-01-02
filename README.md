@@ -81,7 +81,17 @@ To set up the development environment:
    npm run dev
    ```
 
-The development server will start at `http://localhost:8080`. The page will automatically reload when you make changes to the project files.
+The server will start at `http://localhost:3000`. The page will automatically reload when you make changes to the project files.
+
+## Production
+
+To run the server in production mode:
+
+```
+npm start
+```
+
+The server will start at `http://localhost:3000` or the port specified by the `PORT` environment variable.
 
 ## Contributing
 
