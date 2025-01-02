@@ -11,9 +11,7 @@ This project is a simple, web-based WhatsApp chat viewer. It allows users to vie
 
 ## Live Demo
 
-You can view a live demo of this project at: `https://<your-username>.github.io/<repository-name>/`
-
-(Replace `<your-username>` and `<repository-name>` with your actual GitHub username and repository name)
+You can view a live demo of this project at: `https://eladmoshe.github.io/WhatsAppViewer/`
 
 ## How to Run
 
@@ -21,8 +19,8 @@ To run this project locally or deploy it to your own GitHub Pages, follow these 
 
 1. Clone the repository:
    ```
-   git clone https://github.com/<your-username>/<repository-name>.git
-   cd <repository-name>
+   git clone https://github.com/eladmoshe/WhatsAppViewer.git
+   cd WhatsAppViewer
    ```
 
 2. Open `index.html` in your web browser to view the project locally.
@@ -39,7 +37,7 @@ To run this project locally or deploy it to your own GitHub Pages, follow these 
    - Under "Source", select the branch you want to use (usually "main" or "master")
    - Click "Save"
 
-Your project will now be live at `https://<your-username>.github.io/<repository-name>/`
+Your project will now be live at `https://eladmoshe.github.io/WhatsAppViewer/`
 
 ## Customization
 
