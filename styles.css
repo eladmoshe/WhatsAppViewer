@@ -1,0 +1,70 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #e5ddd5;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.header {
+    background-color: #075e54;
+    color: white;
+    padding: 10px;
+    text-align: center;
+}
+
+.search {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    background-color: #075e54;
+}
+
+.search input {
+    flex: 1;
+    padding: 5px;
+}
+
+.search button {
+    padding: 5px;
+    background-color: #128c7e;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.chat-container {
+    padding: 10px;
+    overflow-y: auto;
+    max-height: calc(100vh - 150px);
+}
+
+.message {
+    margin-bottom: 10px;
+}
+
+.timestamp {
+    font-size: 0.8em;
+    color: #667781;
+}
+
+.bubble {
+    max-width: 70%;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.bubble.outgoing {
+    background-color: #dcf8c6;
+    margin-left: auto;
+}
+
+.bubble.incoming {
+    background-color: #ffffff;
+}
+
+.highlight {
+    background-color: yellow;
+}
