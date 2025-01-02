@@ -3,25 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>צופה שיחות וואטסאפ</title>
+    <title>WhatsApp Chat Viewer</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="header">
-        <h1>צופה שיחות וואטסאפ</h1>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="chat-header">
+            <div class="chat-header-content">
+                <div class="chat-info">
+                    <i class="fas fa-arrow-right back-button"></i>
+                    <div class="chat-title">WhatsApp Chat Viewer</div>
+                </div>
+                <div class="chat-actions">
+                    <i class="fas fa-search search-toggle"></i>
+                    <i class="fas fa-ellipsis-v"></i>
+                </div>
+            </div>
+            <!-- Search Bar (hidden by default) -->
+            <div class="search-bar" style="display: none;">
+                <div class="search-input-container">
+                    <i class="fas fa-arrow-right search-back"></i>
+                    <input type="text" id="searchQuery" placeholder="חפש בצ'אט">
+                </div>
+            </div>
+        </header>
+
+        <!-- File Upload Area -->
+        <div class="file-upload-area" id="fileUploadArea">
+            <div class="upload-content">
+                <i class="fas fa-file-upload"></i>
+                <h2>העלה קובץ ZIP של וואטסאפ</h2>
+                <p>גרור לכאן או לחץ לבחירת קובץ</p>
+                <input type="file" id="zipFile" accept=".zip" class="file-input">
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div id="progressBarContainer" class="progress-container" style="display: none;">
+            <div class="progress-content">
+                <div class="progress-text">טוען שיחה...</div>
+                <progress id="progressBar" value="0" max="100"></progress>
+                <div id="progressText" class="progress-percentage">0%</div>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container" id="chatContainer"></div>
+
+        <!-- Floating Action Button -->
+        <button class="fab" id="scrollToBottom">
+            <i class="fas fa-chevron-down"></i>
+        </button>
     </div>
-    <div class="file-input">
-        <input type="file" id="zipFile" accept=".zip">
-    </div>
-    <div id="progressBarContainer" style="display: none;">
-        <progress id="progressBar" value="0" max="100"></progress>
-        <span id="progressText">0%</span>
-    </div>
-    <div class="search">
-        <input type="text" id="searchQuery" placeholder="חפש הודעה">
-        <button onclick="handleSearch()">חפש</button>
-    </div>
-    <div class="chat-container" id="chatContainer"></div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <script src="script.js"></script>
 </body>

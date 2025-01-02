@@ -1,10 +1,102 @@
 let messages = [];
 let mediaFiles = {};
+let isSearchVisible = false;
 
 document.addEventListener('DOMContentLoaded', function() {
+    setupEventListeners();
+    setupDragAndDrop();
+});
+
+function setupEventListeners() {
+    // File input
     const fileInput = document.getElementById('zipFile');
     fileInput.addEventListener('change', loadZipFile);
-});
+
+    // Search functionality
+    const searchToggle = document.querySelector('.search-toggle');
+    const searchBar = document.querySelector('.search-bar');
+    const searchBack = document.querySelector('.search-back');
+    const searchInput = document.getElementById('searchQuery');
+
+    searchToggle.addEventListener('click', () => {
+        searchBar.style.display = 'block';
+        searchInput.focus();
+        isSearchVisible = true;
+    });
+
+    searchBack.addEventListener('click', () => {
+        searchBar.style.display = 'none';
+        searchInput.value = '';
+        clearHighlights();
+        isSearchVisible = false;
+    });
+
+    searchInput.addEventListener('input', handleSearch);
+
+    // Scroll to bottom button
+    const scrollButton = document.getElementById('scrollToBottom');
+    const chatContainer = document.getElementById('chatContainer');
+
+    chatContainer.addEventListener('scroll', () => {
+        const isNearBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 100;
+        scrollButton.style.display = isNearBottom ? 'none' : 'flex';
+    });
+
+    scrollButton.addEventListener('click', () => {
+        chatContainer.scrollTo({
+            top: chatContainer.scrollHeight,
+            behavior: 'smooth'
+        });
+    });
+
+    // File upload area click
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    fileUploadArea.addEventListener('click', () => {
+        fileInput.click();
+    });
+}
+
+function setupDragAndDrop() {
+    const dropZone = document.getElementById('fileUploadArea');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    function highlight(e) {
+        dropZone.classList.add('highlight');
+    }
+
+    function unhighlight(e) {
+        dropZone.classList.remove('highlight');
+    }
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+
+        if (files.length > 0 && files[0].type === 'application/zip') {
+            loadZipFile({ target: { files: files } });
+        } else {
+            alert('Please drop a ZIP file.');
+        }
+    }
+}
 
 async function loadZipFile(event) {
     console.log("loadZipFile function called");
@@ -53,13 +145,15 @@ async function loadZipFile(event) {
             }
             
             if (chatFileContent) {
-                console.log("Chat content sample:", chatFileContent.substring(0, 200));
                 console.log("Parsing chat content...");
                 messages = parseMessages(chatFileContent);
                 console.log("Parsed messages count:", messages.length);
-                console.log("First 5 parsed messages:", messages.slice(0, 5));
                 console.log("Rendering messages...");
                 renderMessages();
+                
+                // Hide file upload area and show chat container
+                document.getElementById('fileUploadArea').style.display = 'none';
+                document.getElementById('chatContainer').style.display = 'block';
             } else {
                 console.error("No _chat.txt file found in the zip");
                 throw new Error('No _chat.txt file found in the zip');
@@ -155,6 +249,9 @@ function renderMessages() {
         chatContainer.appendChild(msgDiv);
     });
     console.log("Finished rendering messages");
+    
+    // Scroll to bottom after rendering
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 function handleSearch() {
@@ -177,6 +274,13 @@ function handleSearch() {
     });
     
     console.log("Search completed, matches found:", found);
+}
+
+function clearHighlights() {
+    const highlightedElements = document.querySelectorAll(".highlight");
+    highlightedElements.forEach(element => {
+        element.classList.remove("highlight");
+    });
 }
 
 // Make sure these functions are in the global scope
