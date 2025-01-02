@@ -2,13 +2,13 @@ let messages = [];
 
 window.addEventListener('load', () => {
     loadSavedUrl();
-    loadChatData();
 });
 
 function loadSavedUrl() {
     const savedUrl = localStorage.getItem('driveUrl');
     if (savedUrl) {
         document.getElementById('driveUrl').value = savedUrl;
+        loadChatData();
     }
 }
 
@@ -19,7 +19,7 @@ function saveUrl() {
 }
 
 function loadChatData() {
-    const url = localStorage.getItem('driveUrl');
+    const url = document.getElementById('driveUrl').value;
     if (url) {
         fetch(url)
             .then(response => response.text())
