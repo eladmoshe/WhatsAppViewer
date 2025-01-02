@@ -1,17 +1,75 @@
 let messages = [];
 
 window.addEventListener('load', () => {
+    loadSavedUrl();
     loadChatData();
 });
 
+function loadSavedUrl() {
+    const savedUrl = localStorage.getItem('driveUrl');
+    if (savedUrl) {
+        document.getElementById('driveUrl').value = savedUrl;
+    }
+}
+
+function saveUrl() {
+    const url = document.getElementById('driveUrl').value;
+    localStorage.setItem('driveUrl', url);
+    loadChatData();
+}
+
 function loadChatData() {
-    fetch('chat_data.json')
-        .then(response => response.json())
-        .then(data => {
-            messages = data;
-            renderMessages();
-        })
-        .catch(error => console.error("Error loading chat data:", error));
+    const url = localStorage.getItem('driveUrl');
+    if (url) {
+        fetch(url)
+            .then(response => response.text())
+            .then(data => {
+                messages = parseWhatsAppChat(data);
+                renderMessages();
+            })
+            .catch(error => {
+                console.error("Error loading chat data:", error);
+                alert("שגיאה בטעינת הנתונים. אנא ודא שהקישור תקין ושהקובץ נגיש.");
+            });
+    } else {
+        alert("אנא הכנס קישור לקובץ Google Drive.");
+    }
+}
+
+function parseWhatsAppChat(chatText) {
+    const lines = chatText.split('\n');
+    const messages = [];
+    let currentMessage = null;
+
+    const dateRegex = /^\[?(\d{1,2}\/\d{1,2}\/\d{2,4},?\s\d{1,2}:\d{2}(?::\d{2})?(?:\s[AP]M)?)\]?\s-\s/;
+    const senderRegex = /^(.*?):\s/;
+
+    lines.forEach(line => {
+        const dateMatch = line.match(dateRegex);
+        if (dateMatch) {
+            if (currentMessage) {
+                messages.push(currentMessage);
+            }
+            const [, datetime] = dateMatch;
+            const remainingContent = line.slice(dateMatch[0].length);
+            const senderMatch = remainingContent.match(senderRegex);
+            let sender = "Unknown";
+            let content = remainingContent;
+            if (senderMatch) {
+                sender = senderMatch[1];
+                content = remainingContent.slice(senderMatch[0].length);
+            }
+            currentMessage = { datetime, sender, content };
+        } else if (currentMessage) {
+            currentMessage.content += '\n' + line;
+        }
+    });
+
+    if (currentMessage) {
+        messages.push(currentMessage);
+    }
+
+    return messages;
 }
 
 function renderMessages() {
@@ -29,7 +87,12 @@ function renderMessages() {
         bubbleDiv.className = `bubble ${msg.sender === "You" ? "outgoing" : "incoming"}`;
         bubbleDiv.textContent = msg.content;
 
+        const senderDiv = document.createElement("div");
+        senderDiv.className = "sender";
+        senderDiv.textContent = msg.sender;
+
         msgDiv.appendChild(timestampDiv);
+        msgDiv.appendChild(senderDiv);
         msgDiv.appendChild(bubbleDiv);
         chatContainer.appendChild(msgDiv);
     });
