@@ -244,16 +244,27 @@ function getRandomColor() {
 function renderMessages() {
     const chatContainer = document.getElementById("chatContainer");
     chatContainer.innerHTML = "";
+    let currentDate = null;
+
     messages.forEach((msg) => {
+        // Parse the date string
+        const [datePart, timePart] = msg.datetime.split(', ');
+        const [day, month, year] = datePart.split('/');
+        const [hour, minute, second] = timePart.split(':');
+        const msgDate = new Date(year, month - 1, day, hour, minute, second);
+
+        const formattedDate = msgDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        
+        if (formattedDate !== currentDate) {
+            const dateDiv = document.createElement("div");
+            dateDiv.className = "date-separator";
+            dateDiv.textContent = formattedDate;
+            chatContainer.appendChild(dateDiv);
+            currentDate = formattedDate;
+        }
+
         const msgDiv = document.createElement("div");
         msgDiv.className = "message";
-
-        if (msg.datetime) {
-            const timestampDiv = document.createElement("div");
-            timestampDiv.className = "timestamp";
-            timestampDiv.textContent = msg.datetime;
-            msgDiv.appendChild(timestampDiv);
-        }
 
         const bubbleDiv = document.createElement("div");
         bubbleDiv.className = `bubble ${msg.type === 'system' ? "system" : (msg.sender === "You" ? "outgoing" : "incoming")}`;
@@ -285,6 +296,11 @@ function renderMessages() {
             msgDiv.appendChild(senderDiv);
         }
 
+        const timeDiv = document.createElement("div");
+        timeDiv.className = "message-time";
+        timeDiv.textContent = msgDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+        bubbleDiv.appendChild(timeDiv);
         msgDiv.appendChild(bubbleDiv);
         chatContainer.appendChild(msgDiv);
     });
