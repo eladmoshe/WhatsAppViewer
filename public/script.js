@@ -126,10 +126,7 @@ async function loadZipFile(event) {
             let totalFiles = Object.keys(contents.files).length;
             let processedFiles = 0;
             
-            console.log("Files in the zip:", Object.keys(contents.files));
-            
             for (const [filename, zipEntry] of Object.entries(contents.files)) {
-                console.log("Processing file:", filename);
                 if (filename === '_chat.txt') {
                     console.log("Found _chat.txt, loading content...");
                     chatFileContent = await zipEntry.async('string');
@@ -182,31 +179,39 @@ function loadImageInBackground(filename, zipEntry) {
 function parseMessages(text) {
     const lines = text.split('\n');
     const parsedMessages = [];
-    let lastSender = '';
-    let lastDatetime = '';
+    let currentMessage = null;
+
+    const dateTimeRegex = /\[(\d{2}\/\d{2}\/\d{4},\s\d{1,2}:\d{2}:\d{2})\]/;
 
     lines.forEach((line, index) => {
-        const match = line.match(/^\[(\d{2}\/\d{2}\/\d{4},\s\d{1,2}:\d{2}:\d{2})\]\s(.+?):\s(.+)$/);
-        if (match) {
-            lastDatetime = match[1];
-            lastSender = match[2].trim();
-            parsedMessages.push({
-                datetime: lastDatetime,
-                sender: lastSender,
-                content: match[3].trim(),
+        const dateTimeMatch = line.match(dateTimeRegex);
+        if (dateTimeMatch) {
+            if (currentMessage) {
+                parsedMessages.push(currentMessage);
+            }
+            const [, dateTime] = dateTimeMatch;
+            const restOfLine = line.substring(dateTimeMatch[0].length).trim();
+            const [sender, ...contentParts] = restOfLine.split(':');
+            const content = contentParts.join(':').trim();
+
+            currentMessage = {
+                datetime: dateTime,
+                sender: sender.trim(),
+                content: content,
                 type: 'regular'
-            });
+            };
+
+            // Check if this is a system message
+            if (content.includes('changed the group') || 
+                content.includes('added') || 
+                content.includes('removed')) {
+                currentMessage.type = 'system';
+            }
         } else if (line.trim() !== '') {
-            // This might be a continuation of the previous message or a standalone message
-            if (lastSender) {
-                parsedMessages.push({
-                    datetime: lastDatetime,
-                    sender: lastSender,
-                    content: line.trim(),
-                    type: 'standalone'
-                });
+            if (currentMessage) {
+                currentMessage.content += '\n' + line.trim();
             } else {
-                // If we don't have a last sender, treat it as a system message
+                // If we can't parse it and it's not a continuation, treat it as a system message
                 parsedMessages.push({
                     datetime: '',
                     sender: 'System',
@@ -216,6 +221,10 @@ function parseMessages(text) {
             }
         }
     });
+
+    if (currentMessage) {
+        parsedMessages.push(currentMessage);
+    }
 
     console.log("Number of parsed messages:", parsedMessages.length);
     return parsedMessages;
@@ -230,35 +239,39 @@ function renderMessages() {
         const msgDiv = document.createElement("div");
         msgDiv.className = "message";
 
-        const timestampDiv = document.createElement("div");
-        timestampDiv.className = "timestamp";
-        timestampDiv.textContent = msg.datetime;
+        if (msg.datetime) {
+            const timestampDiv = document.createElement("div");
+            timestampDiv.className = "timestamp";
+            timestampDiv.textContent = msg.datetime;
+            msgDiv.appendChild(timestampDiv);
+        }
 
         const bubbleDiv = document.createElement("div");
         bubbleDiv.className = `bubble ${msg.type === 'system' ? "system" : (msg.sender === "You" ? "outgoing" : "incoming")}`;
-        
-        // Check if the content is an image file
-        const imageMatch = msg.content.match(/<attached: (.+)>/);
-        if (imageMatch && mediaFiles[imageMatch[1]]) {
-            console.log(`Rendering image for message ${index + 1}:`, imageMatch[1]);
+        bubbleDiv.dir = "auto"; // This will automatically set the text direction
+
+        // Check if the content is an image file or sticker
+        const mediaMatch = msg.content.match(/<attached: (.+)>/);
+        if (mediaMatch && mediaFiles[mediaMatch[1]]) {
+            console.log(`Rendering media for message ${index + 1}:`, mediaMatch[1]);
             const img = document.createElement('img');
-            img.src = mediaFiles[imageMatch[1]];
-            img.alt = 'Attached image';
-            img.className = 'attached-image';
+            img.src = mediaFiles[mediaMatch[1]];
+            img.alt = 'Attached media';
+            img.className = mediaMatch[1].endsWith('.webp') ? 'attached-sticker' : 'attached-image';
             bubbleDiv.appendChild(img);
         } else {
-            // Use textContent to prevent XSS
-            bubbleDiv.textContent = msg.content;
+            // Use a helper function to render content with clickable links
+            bubbleDiv.innerHTML = renderContentWithLinks(msg.content);
         }
 
-        const senderDiv = document.createElement("div");
-        senderDiv.className = "sender";
-        senderDiv.textContent = msg.sender;
-
-        msgDiv.appendChild(timestampDiv);
-        if (msg.type !== 'system' && msg.type !== 'standalone') {
+        if (msg.type !== 'system') {
+            const senderDiv = document.createElement("div");
+            senderDiv.className = "sender";
+            senderDiv.textContent = msg.sender;
+            senderDiv.dir = "auto"; // This will automatically set the text direction for the sender name
             msgDiv.appendChild(senderDiv);
         }
+
         msgDiv.appendChild(bubbleDiv);
         chatContainer.appendChild(msgDiv);
     });
@@ -302,3 +315,13 @@ window.loadZipFile = loadZipFile;
 window.handleSearch = handleSearch;
 
 console.log("Script loaded and ready");
+
+function renderContentWithLinks(content) {
+    // Regular expression to match URLs
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    
+    // Replace URLs with clickable links
+    return content.replace(urlRegex, (url) => {
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+    });
+}

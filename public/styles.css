@@ -179,6 +179,7 @@ progress::-webkit-progress-value {
     margin-bottom: 8px;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .message.outgoing {
@@ -190,11 +191,14 @@ progress::-webkit-progress-value {
 }
 
 .bubble {
-    max-width: 65%;
-    padding: 8px 12px;
-    border-radius: 7.5px;
+    text-align: start;
+    max-width: 60%; /* Limit the width of the bubbles */
+    margin: 5px 0; /* Add some margin for spacing */
+    padding: 10px; /* Add padding for better appearance */
+    border-radius: 10px; /* Round the corners */
+    background-color: #f1f0f0; /* Background color for the bubbles */
+    word-wrap: break-word; /* Ensure long words break to the next line */
     position: relative;
-    box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
 }
 
 .bubble.outgoing {
@@ -226,6 +230,7 @@ progress::-webkit-progress-value {
 }
 
 .sender {
+    text-align: start;
     color: #1f7aad;
     font-size: 0.95rem;
     font-weight: 500;
@@ -242,6 +247,9 @@ progress::-webkit-progress-value {
     color: #667781;
     margin-top: 2px;
     align-self: flex-end;
+    position: absolute;
+    bottom: 5px;
+    right: 10px;
 }
 
 /* Highlight for search results */
@@ -285,7 +293,7 @@ progress::-webkit-progress-value {
     }
 
     .bubble {
-        max-width: 80%;
+        max-width: 80%; /* Adjust max-width for smaller screens */
     }
 
     .chat-header {
@@ -306,6 +314,12 @@ progress::-webkit-progress-value {
     max-width: 100%;
     border-radius: 5px;
     margin-top: 5px;
+}
+
+/* Attached Stickers */
+.attached-sticker {
+    max-width: 128px;
+    max-height: 128px;
 }
 
 /* Loading Spinner */
