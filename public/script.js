@@ -182,24 +182,38 @@ function loadImageInBackground(filename, zipEntry) {
 function parseMessages(text) {
     const lines = text.split('\n');
     const parsedMessages = [];
+    let lastSender = '';
+    let lastDatetime = '';
 
     lines.forEach((line, index) => {
         const match = line.match(/^\[(\d{2}\/\d{2}\/\d{4},\s\d{1,2}:\d{2}:\d{2})\]\s(.+?):\s(.+)$/);
         if (match) {
+            lastDatetime = match[1];
+            lastSender = match[2].trim();
             parsedMessages.push({
-                datetime: match[1],
-                sender: match[2].trim(),
+                datetime: lastDatetime,
+                sender: lastSender,
                 content: match[3].trim(),
                 type: 'regular'
             });
         } else if (line.trim() !== '') {
-            // This might be a system message or other non-standard format
-            parsedMessages.push({
-                datetime: '',
-                sender: 'System',
-                content: line.trim(),
-                type: 'system'
-            });
+            // This might be a continuation of the previous message or a standalone message
+            if (lastSender) {
+                parsedMessages.push({
+                    datetime: lastDatetime,
+                    sender: lastSender,
+                    content: line.trim(),
+                    type: 'standalone'
+                });
+            } else {
+                // If we don't have a last sender, treat it as a system message
+                parsedMessages.push({
+                    datetime: '',
+                    sender: 'System',
+                    content: line.trim(),
+                    type: 'system'
+                });
+            }
         }
     });
 
@@ -242,7 +256,7 @@ function renderMessages() {
         senderDiv.textContent = msg.sender;
 
         msgDiv.appendChild(timestampDiv);
-        if (msg.type !== 'system') {
+        if (msg.type !== 'system' && msg.type !== 'standalone') {
             msgDiv.appendChild(senderDiv);
         }
         msgDiv.appendChild(bubbleDiv);

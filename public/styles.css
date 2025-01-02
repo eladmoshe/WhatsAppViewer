@@ -215,6 +215,16 @@ progress::-webkit-progress-value {
     padding: 8px 12px;
 }
 
+.bubble.standalone {
+    background-color: #f0f0f0;
+    color: #333;
+    margin: 4px 0;
+    text-align: left;
+    max-width: 90%;
+    border-radius: 5px;
+    padding: 8px 12px;
+}
+
 .sender {
     color: #1f7aad;
     font-size: 0.95rem;
