@@ -190,13 +190,13 @@ progress::-webkit-progress-value {
 }
 
 .bubble {
-    text-align: start;
-    max-width: 60%; /* Limit the width of the bubbles */
-    margin: 5px 0; /* Add some margin for spacing */
-    padding: 10px; /* Add padding for better appearance */
-    border-radius: 10px; /* Round the corners */
-    background-color: #f1f0f0; /* Background color for the bubbles */
-    word-wrap: break-word; /* Ensure long words break to the next line */
+    display: inline-block;
+    max-width: 60%;
+    min-width: 75px;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 10px;
+    word-wrap: break-word;
     position: relative;
 }
 
@@ -218,16 +218,6 @@ progress::-webkit-progress-value {
     padding: 8px 12px;
 }
 
-.bubble.standalone {
-    background-color: #f0f0f0;
-    color: #333;
-    margin: 4px 0;
-    text-align: left;
-    max-width: 90%;
-    border-radius: 5px;
-    padding: 8px 12px;
-}
-
 .sender {
     margin-bottom: 2px;
     font-weight: bold;
@@ -236,16 +226,18 @@ progress::-webkit-progress-value {
 .message-content {
     font-size: 0.9375rem;
     line-height: 1.4;
+    white-space: pre-wrap;
 }
 
-.timestamp {
-    font-size: 0.6875rem;
+.message-time {
+    font-size: 0.75em;
     color: #667781;
-    margin-top: 2px;
-    align-self: flex-end;
     position: absolute;
     bottom: 5px;
-    right: 10px;
+    right: 7px;
+    padding-left: 10px;
+    background: inherit;
+    white-space: nowrap;
 }
 
 /* Highlight for search results */
@@ -335,14 +327,18 @@ progress::-webkit-progress-value {
 }
 
 .date-separator {
-    background-color: #e1f2fb;
-    color: #51585c;
     text-align: center;
-    padding: 5px 10px;
-    border-radius: 5px;
-    margin: 10px auto;
-    font-size: 0.9em;
-    max-width: 150px;
+    margin: 10px 0;
+    font-size: 0.8em;
+}
+
+.date-bubble {
+    display: inline-block;
+    background-color: #e0e0e0;
+    color: #555;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
 }
 
 .message-time {
@@ -364,4 +360,32 @@ progress::-webkit-progress-value {
 
 .bubble.system .message-time {
     display: none;
+}
+
+.scroll-buttons {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.scroll-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #00a884;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s;
+}
+
+.scroll-button:hover {
+    background-color: #008c6e;
 }

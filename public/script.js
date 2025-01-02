@@ -5,6 +5,37 @@ let isSearchVisible = false;
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     setupDragAndDrop();
+    const scrollToTopBtn = document.getElementById('scrollToTop');
+    const scrollToBottomBtn = document.getElementById('scrollToBottom');
+    const chatContainer = document.getElementById('chatContainer');
+
+    scrollToTopBtn.addEventListener('click', () => {
+        chatContainer.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+
+    scrollToBottomBtn.addEventListener('click', () => {
+        chatContainer.scrollTo({
+            top: chatContainer.scrollHeight,
+            behavior: 'smooth'
+        });
+    });
+
+    chatContainer.addEventListener('scroll', () => {
+        if (chatContainer.scrollTop > 100) {
+            scrollToTopBtn.style.display = 'flex';
+        } else {
+            scrollToTopBtn.style.display = 'none';
+        }
+
+        if (chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight > 100) {
+            scrollToBottomBtn.style.display = 'flex';
+        } else {
+            scrollToBottomBtn.style.display = 'none';
+        }
+    });
 });
 
 function setupEventListeners() {
@@ -32,22 +63,6 @@ function setupEventListeners() {
     });
 
     searchInput.addEventListener('input', handleSearch);
-
-    // Scroll to bottom button
-    const scrollButton = document.getElementById('scrollToBottom');
-    const chatContainer = document.getElementById('chatContainer');
-
-    chatContainer.addEventListener('scroll', () => {
-        const isNearBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 100;
-        scrollButton.style.display = isNearBottom ? 'none' : 'flex';
-    });
-
-    scrollButton.addEventListener('click', () => {
-        chatContainer.scrollTo({
-            top: chatContainer.scrollHeight,
-            behavior: 'smooth'
-        });
-    });
 
     // File upload area click
     const fileUploadArea = document.getElementById('fileUploadArea');
@@ -246,6 +261,18 @@ function renderMessages() {
     chatContainer.innerHTML = "";
     let currentDate = null;
 
+    function formatDate(date) {
+        const now = new Date();
+        const diffTime = Math.abs(now - date);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays <= 7) {
+            return date.toLocaleDateString('en-US', { weekday: 'long' });
+        } else {
+            return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        }
+    }
+
     messages.forEach((msg) => {
         // Parse the date string
         const [datePart, timePart] = msg.datetime.split(', ');
@@ -253,18 +280,21 @@ function renderMessages() {
         const [hour, minute, second] = timePart.split(':');
         const msgDate = new Date(year, month - 1, day, hour, minute, second);
 
-        const formattedDate = msgDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const formattedDate = formatDate(msgDate);
         
         if (formattedDate !== currentDate) {
             const dateDiv = document.createElement("div");
             dateDiv.className = "date-separator";
-            dateDiv.textContent = formattedDate;
+            const dateBubble = document.createElement("span");
+            dateBubble.className = "date-bubble";
+            dateBubble.textContent = formattedDate;
+            dateDiv.appendChild(dateBubble);
             chatContainer.appendChild(dateDiv);
             currentDate = formattedDate;
         }
 
         const msgDiv = document.createElement("div");
-        msgDiv.className = "message";
+        msgDiv.className = `message ${msg.sender === "You" ? "outgoing" : "incoming"}`;
 
         const bubbleDiv = document.createElement("div");
         bubbleDiv.className = `bubble ${msg.type === 'system' ? "system" : (msg.sender === "You" ? "outgoing" : "incoming")}`;
@@ -278,7 +308,20 @@ function renderMessages() {
             img.className = mediaMatch[1].endsWith('.webp') ? 'attached-sticker' : 'attached-image';
             bubbleDiv.appendChild(img);
         } else {
-            bubbleDiv.innerHTML = renderContentWithLinks(msg.content);
+            const contentSpan = document.createElement('span');
+            contentSpan.className = 'message-content';
+            contentSpan.innerHTML = renderContentWithLinks(msg.content);
+            bubbleDiv.appendChild(contentSpan);
+
+            // Adjust bubble width after rendering
+            setTimeout(() => {
+                const contentWidth = contentSpan.offsetWidth;
+                const maxWidth = bubbleDiv.offsetWidth;
+                const minWidth = 60; // Minimum width in pixels
+                if (contentWidth < maxWidth) {
+                    bubbleDiv.style.width = `${Math.max(contentWidth + 40, minWidth)}px`;
+                }
+            }, 0);
         }
 
         if (msg.type !== 'system') {
