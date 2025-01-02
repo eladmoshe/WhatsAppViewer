@@ -176,10 +176,9 @@ progress::-webkit-progress-value {
 
 /* Message Styles */
 .message {
-    margin-bottom: 8px;
     display: flex;
     flex-direction: column;
-    position: relative;
+    margin-bottom: 10px;
 }
 
 .message.outgoing {
@@ -230,11 +229,8 @@ progress::-webkit-progress-value {
 }
 
 .sender {
-    text-align: start;
-    color: #1f7aad;
-    font-size: 0.95rem;
-    font-weight: 500;
     margin-bottom: 2px;
+    font-weight: bold;
 }
 
 .message-content {

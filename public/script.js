@@ -230,12 +230,21 @@ function parseMessages(text) {
     return parsedMessages;
 }
 
+const userColors = {};
+
+function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
 function renderMessages() {
-    console.log("Rendering messages, count:", messages.length);
     const chatContainer = document.getElementById("chatContainer");
     chatContainer.innerHTML = "";
-    messages.forEach((msg, index) => {
-        console.log(`Rendering message ${index + 1}:`, msg);
+    messages.forEach((msg) => {
         const msgDiv = document.createElement("div");
         msgDiv.className = "message";
 
@@ -248,19 +257,16 @@ function renderMessages() {
 
         const bubbleDiv = document.createElement("div");
         bubbleDiv.className = `bubble ${msg.type === 'system' ? "system" : (msg.sender === "You" ? "outgoing" : "incoming")}`;
-        bubbleDiv.dir = "auto"; // This will automatically set the text direction
+        bubbleDiv.dir = "auto";
 
-        // Check if the content is an image file or sticker
         const mediaMatch = msg.content.match(/<attached: (.+)>/);
         if (mediaMatch && mediaFiles[mediaMatch[1]]) {
-            console.log(`Rendering media for message ${index + 1}:`, mediaMatch[1]);
             const img = document.createElement('img');
             img.src = mediaFiles[mediaMatch[1]];
             img.alt = 'Attached media';
             img.className = mediaMatch[1].endsWith('.webp') ? 'attached-sticker' : 'attached-image';
             bubbleDiv.appendChild(img);
         } else {
-            // Use a helper function to render content with clickable links
             bubbleDiv.innerHTML = renderContentWithLinks(msg.content);
         }
 
@@ -268,16 +274,21 @@ function renderMessages() {
             const senderDiv = document.createElement("div");
             senderDiv.className = "sender";
             senderDiv.textContent = msg.sender;
-            senderDiv.dir = "auto"; // This will automatically set the text direction for the sender name
+            senderDiv.dir = "auto";
+            senderDiv.style.textAlign = "right";
+            
+            if (!userColors[msg.sender]) {
+                userColors[msg.sender] = getRandomColor();
+            }
+            senderDiv.style.color = userColors[msg.sender];
+            
             msgDiv.appendChild(senderDiv);
         }
 
         msgDiv.appendChild(bubbleDiv);
         chatContainer.appendChild(msgDiv);
     });
-    console.log("Finished rendering messages");
     
-    // Scroll to bottom after rendering
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
