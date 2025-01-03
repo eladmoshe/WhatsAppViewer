@@ -142,10 +142,11 @@ async function loadZipFile(event) {
             let processedFiles = 0;
             
             for (const [filename, zipEntry] of Object.entries(contents.files)) {
-                if (filename === '_chat.txt') {
-                    console.log("Found _chat.txt, loading content...");
+                if (filename.endsWith('.txt')) {
+                    console.log(`Found text file: ${filename}, loading content...`);
                     chatFileContent = await zipEntry.async('string');
                     console.log("Chat content loaded, length:", chatFileContent.length);
+                    break; // Stop after finding the first text file
                 } else if (filename.endsWith('.jpg') || filename.endsWith('.png') || filename.endsWith('.gif')) {
                     // Load images in the background
                     loadImageInBackground(filename, zipEntry);
@@ -167,8 +168,8 @@ async function loadZipFile(event) {
                 document.getElementById('fileUploadArea').style.display = 'none';
                 document.getElementById('chatContainer').style.display = 'block';
             } else {
-                console.error("No _chat.txt file found in the zip");
-                throw new Error('No _chat.txt file found in the zip');
+                console.error("No text file found in the zip");
+                throw new Error('No text file found in the zip');
             }
             
             // Hide progress bar
@@ -192,48 +193,84 @@ function loadImageInBackground(filename, zipEntry) {
 }
 
 function parseMessages(text) {
+    if (!text || typeof text !== 'string') {
+        console.error("Invalid input to parseMessages:", text);
+        return [];
+    }
+
     const lines = text.split('\n');
     const parsedMessages = [];
     let currentMessage = null;
+    let isLegacyFormat = null;
 
-    const dateTimeRegex = /\[(\d{2}\/\d{2}\/\d{4},\s\d{1,2}:\d{2}:\d{2})\]/;
+    // Regular expressions for both formats
+    const newFormatRegex = /\[(\d{1,2}\/\d{1,2}\/\d{4},\s\d{1,2}:\d{2}:\d{2})\]\s(.*?):\s(.*)/;
+    const legacyFormatRegex = /(\d{1,2}\/\d{1,2}\/\d{2,4},\s\d{1,2}:\d{2}(?::\d{2})?)\s-\s(.*?):\s(.*)/;
+
+    function parseDate(dateString, isLegacy) {
+        const [datePart, timePart] = dateString.split(', ');
+        let [day, month, year] = datePart.split('/');
+        const [hour, minute, second] = timePart.split(':');
+
+        // Adjust year for legacy format
+        if (isLegacy && year.length === 2) {
+            year = '20' + year;
+        }
+
+        // JavaScript months are 0-indexed
+        return new Date(year, month - 1, day, hour, minute, second || 0);
+    }
+
+    function parseLineWithRegex(line, regex, isLegacy) {
+        const match = line.match(regex);
+        if (match) {
+            const [, dateTime, sender, content] = match;
+            return {
+                datetime: parseDate(dateTime, isLegacy),
+                sender: sender.trim(),
+                content: content.trim(),
+                type: 'regular'
+            };
+        }
+        return null;
+    }
 
     lines.forEach((line, index) => {
-        const dateTimeMatch = line.match(dateTimeRegex);
-        if (dateTimeMatch) {
+        if (!line.trim()) return; // Skip empty lines
+
+        let parsedLine = null;
+
+        if (isLegacyFormat === null) {
+            // Determine the format based on the first valid message
+            parsedLine = parseLineWithRegex(line, newFormatRegex, false);
+            if (parsedLine) {
+                isLegacyFormat = false;
+            } else {
+                parsedLine = parseLineWithRegex(line, legacyFormatRegex, true);
+                if (parsedLine) {
+                    isLegacyFormat = true;
+                }
+            }
+        } else {
+            // Parse subsequent lines based on the determined format
+            parsedLine = parseLineWithRegex(line, isLegacyFormat ? legacyFormatRegex : newFormatRegex, isLegacyFormat);
+        }
+
+        if (parsedLine) {
             if (currentMessage) {
                 parsedMessages.push(currentMessage);
             }
-            const [, dateTime] = dateTimeMatch;
-            const restOfLine = line.substring(dateTimeMatch[0].length).trim();
-            const [sender, ...contentParts] = restOfLine.split(':');
-            const content = contentParts.join(':').trim();
-
-            currentMessage = {
-                datetime: dateTime,
-                sender: sender.trim(),
-                content: content,
-                type: 'regular'
-            };
-
-            // Check if this is a system message
-            if (content.includes('changed the group') || 
-                content.includes('added') || 
-                content.includes('removed')) {
-                currentMessage.type = 'system';
-            }
-        } else if (line.trim() !== '') {
-            if (currentMessage) {
-                currentMessage.content += '\n' + line.trim();
-            } else {
-                // If we can't parse it and it's not a continuation, treat it as a system message
-                parsedMessages.push({
-                    datetime: '',
-                    sender: 'System',
-                    content: line.trim(),
-                    type: 'system'
-                });
-            }
+            currentMessage = parsedLine;
+        } else if (currentMessage) {
+            currentMessage.content += '\n' + line.trim();
+        } else {
+            // If we can't parse it and it's not a continuation, treat it as a system message
+            parsedMessages.push({
+                datetime: new Date(),
+                sender: 'System',
+                content: line.trim(),
+                type: 'system'
+            });
         }
     });
 
@@ -242,6 +279,7 @@ function parseMessages(text) {
     }
 
     console.log("Number of parsed messages:", parsedMessages.length);
+    console.log("Format detected:", isLegacyFormat ? "Legacy" : "New");
     return parsedMessages;
 }
 
@@ -274,13 +312,7 @@ function renderMessages() {
     }
 
     messages.forEach((msg) => {
-        // Parse the date string
-        const [datePart, timePart] = msg.datetime.split(', ');
-        const [day, month, year] = datePart.split('/');
-        const [hour, minute, second] = timePart.split(':');
-        const msgDate = new Date(year, month - 1, day, hour, minute, second);
-
-        const formattedDate = formatDate(msgDate);
+        const formattedDate = formatDate(msg.datetime);
         
         if (formattedDate !== currentDate) {
             const dateDiv = document.createElement("div");
@@ -341,7 +373,7 @@ function renderMessages() {
 
         const timeDiv = document.createElement("div");
         timeDiv.className = "message-time";
-        timeDiv.textContent = msgDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        timeDiv.textContent = msg.datetime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
         bubbleDiv.appendChild(timeDiv);
         msgDiv.appendChild(bubbleDiv);
