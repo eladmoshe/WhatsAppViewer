@@ -520,6 +520,7 @@ function renderMessages() {
         // Time
         const timeDiv = document.createElement("span");
         timeDiv.className = "message-time";
+        timeDiv.dir = "ltr";
         timeDiv.textContent = msg.datetime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         bubbleDiv.appendChild(timeDiv);
 
