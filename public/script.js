@@ -245,6 +245,7 @@ async function loadZipFile(event) {
         document.getElementById('fileUploadArea').style.display = 'none';
         document.getElementById('chatContainer').style.display = 'block';
         document.getElementById('iphoneToggle').style.display = '';
+        document.getElementById('desktopInputBar').style.display = '';
 
         progressBarContainer.style.display = 'none';
     } catch (error) {
