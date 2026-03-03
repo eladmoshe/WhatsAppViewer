@@ -347,17 +347,17 @@ progress::-webkit-progress-value {
 
 /* Avatar */
 .message-avatar {
-    width: 28px;
-    height: 28px;
+    width: 33px;
+    height: 33px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 600;
     flex-shrink: 0;
-    margin-top: 4px;
+    margin-top: 2px;
     margin-left: 6px;
 }
 
@@ -373,7 +373,7 @@ progress::-webkit-progress-value {
 .message-wrapper {
     display: flex;
     flex-direction: column;
-    max-width: 60%;
+    max-width: 65%;
 }
 
 .message.outgoing .message-wrapper {
@@ -388,12 +388,12 @@ progress::-webkit-progress-value {
 .bubble {
     display: inline-block;
     min-width: 75px;
-    padding: 6px 7px 8px 6px;
+    padding: 6px 7px 6px 6px;
     border-radius: 7.5px;
     word-wrap: break-word;
     position: relative;
-    padding-bottom: 22px;
     box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+    overflow: hidden;
 }
 
 .bubble.outgoing {
@@ -489,9 +489,11 @@ progress::-webkit-progress-value {
 .message-time {
     font-size: 0.6875rem;
     color: #667781;
-    position: absolute;
-    bottom: 4px;
-    left: 6px;
+    float: left;
+    margin-top: 4px;
+    margin-left: 4px;
+    position: relative;
+    top: 4px;
     white-space: nowrap;
 }
 
@@ -528,6 +530,38 @@ progress::-webkit-progress-value {
     font-size: 0.775rem;
     font-weight: 500;
     box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+}
+
+/* ===========================
+   DESKTOP INPUT BAR
+   =========================== */
+.desktop-input-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 16px;
+    background: #f0f2f5;
+}
+
+.desktop-input-icons {
+    display: flex;
+    gap: 12px;
+    color: #54656f;
+    font-size: 1.4rem;
+}
+
+.desktop-text-field {
+    flex: 1;
+    background: white;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 0.95rem;
+    color: #8696a0;
+}
+
+.desktop-mic {
+    color: #54656f;
+    font-size: 1.4rem;
 }
 
 /* ===========================
@@ -672,6 +706,10 @@ progress::-webkit-progress-value {
     display: none;
 }
 
+.app-container.iphone-mode .desktop-input-bar {
+    display: none !important;
+}
+
 .app-container.iphone-mode .chat-container {
     padding: 8px 10px;
     flex: 1;
@@ -688,9 +726,9 @@ progress::-webkit-progress-value {
     margin-left: 4px;
 }
 
-/* iOS Status Bar */
+/* iOS Status Bar — dark theme */
 .iphone-header {
-    background-color: #f2f2f7;
+    background-color: #1f2c34;
     padding-top: 16px;
     z-index: 100;
 }
@@ -702,41 +740,41 @@ progress::-webkit-progress-value {
     padding: 4px 24px 2px;
     font-size: 0.85rem;
     font-weight: 600;
-    color: #000;
+    color: #fff;
 }
 
 .ios-status-icons {
     display: flex;
     gap: 5px;
     font-size: 0.75rem;
-    color: #000;
+    color: #fff;
 }
 
 .ios-time {
     font-weight: 600;
 }
 
-/* iOS Navigation Bar */
+/* iOS Navigation Bar — dark theme */
 .ios-nav-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 8px 12px 10px;
-    background-color: #f2f2f7;
-    border-bottom: 0.5px solid #c8c8cc;
+    background-color: #1f2c34;
+    border-bottom: 0.5px solid #2a3942;
 }
 
 .ios-nav-left {
     display: flex;
     align-items: center;
     gap: 2px;
-    color: #007aff;
+    color: #00a884;
     font-size: 1rem;
 }
 
 .ios-back-count {
     font-size: 0.85rem;
-    color: #007aff;
+    color: #00a884;
 }
 
 .ios-nav-center {
@@ -751,7 +789,7 @@ progress::-webkit-progress-value {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: #c4c4c4;
+    background: #6b7b85;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -763,90 +801,84 @@ progress::-webkit-progress-value {
 .ios-contact-name {
     font-size: 1rem;
     font-weight: 600;
-    color: #000;
+    color: #e9edef;
 }
 
 .ios-nav-right {
     display: flex;
     gap: 20px;
-    color: #007aff;
+    color: #8696a0;
     font-size: 1.1rem;
 }
 
-/* iOS Input Bar */
+/* iOS Input Bar — dark theme */
 .ios-input-bar {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 8px 12px 28px;
-    background: #f2f2f7;
-    border-top: 0.5px solid #c8c8cc;
+    background: #1f2c34;
+    border-top: 0.5px solid #2a3942;
 }
 
 .ios-input-bar > i {
-    color: #007aff;
+    color: #8696a0;
     font-size: 1.3rem;
 }
 
 .ios-text-field {
     flex: 1;
-    background: white;
-    border: 0.5px solid #c8c8cc;
+    background: #2a3942;
+    border: none;
     border-radius: 20px;
     padding: 8px 14px;
     font-size: 0.9rem;
-    color: #8e8e93;
+    color: #8696a0;
 }
 
 .ios-input-actions {
     display: flex;
     gap: 12px;
-    color: #007aff;
+    color: #8696a0;
     font-size: 1.1rem;
 }
 
-/* iOS-style bubbles in iPhone mode */
+/* iPhone dark mode bubbles */
 .app-container.iphone-mode .bubble {
-    border-radius: 18px;
-    padding: 6px 10px 20px;
+    border-radius: 7.5px;
+    padding: 6px 7px 6px 6px;
 }
 
 .app-container.iphone-mode .bubble.outgoing {
-    background-color: #34b759;
-    color: white;
-    border-bottom-right-radius: 4px;
-    border-top-right-radius: 18px;
-    border-top-left-radius: 18px;
+    background-color: #005c4b;
+    color: #e9edef;
 }
 
 .app-container.iphone-mode .bubble.outgoing::before {
-    border-color: transparent transparent transparent #34b759;
+    border-color: transparent transparent transparent #005c4b;
 }
 
 .app-container.iphone-mode .bubble.incoming {
-    background-color: #e9e9eb;
-    color: #000;
-    border-bottom-left-radius: 4px;
-    border-top-left-radius: 18px;
-    border-top-right-radius: 18px;
+    background-color: #202c33;
+    color: #e9edef;
 }
 
 .app-container.iphone-mode .bubble.incoming::before {
-    border-color: transparent #e9e9eb transparent transparent;
+    border-color: transparent #202c33 transparent transparent;
 }
 
 .app-container.iphone-mode .bubble.outgoing .message-time {
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .app-container.iphone-mode .bubble.incoming .message-time {
-    color: #8e8e93;
+    color: rgba(255, 255, 255, 0.4);
 }
 
 .app-container.iphone-mode .bubble.system {
-    background-color: rgba(0, 0, 0, 0.06);
-    color: #8e8e93;
-    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.55);
+    border-radius: 7.5px;
 }
 
 .app-container.iphone-mode .sender {
@@ -857,16 +889,20 @@ progress::-webkit-progress-value {
     font-size: 0.9rem;
 }
 
+.app-container.iphone-mode .message-content a {
+    color: #53bdeb;
+}
+
 .app-container.iphone-mode .date-bubble {
-    background-color: rgba(0, 0, 0, 0.06);
-    color: #8e8e93;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.55);
     font-size: 0.7rem;
-    border-radius: 10px;
+    border-radius: 7.5px;
 }
 
 .app-container.iphone-mode .chat-container {
-    background-color: #fff;
-    background-image: none;
+    background-color: #0b141a;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cg fill='%23111b21' opacity='0.6'%3E%3Cpath d='M20 20h8v2h-8zm30 0h6v2h-6zm25 5h10v2H75zm-55 20h6v2H20zm40-5h8v2H60zm45 10h6v2h-6zm-80 15h10v2H25zm55 0h6v2H80zm30-5h8v2h-8zm-95 25h6v2H15zm50 5h10v2H65zm40-10h6v2h-6zm-75 20h8v2H30zm35 5h6v2H65zm45-5h10v2h-10zM10 125h6v2h-6zm45 10h8v2H55zm40-5h6v2H95zM25 150h10v2H25zm50 5h6v2H75zm30-10h8v2h-8zM15 175h6v2h-6zm40 5h10v2H55zm45-5h6v2h-6z'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* Exit iPhone Mode Button */
@@ -894,7 +930,7 @@ progress::-webkit-progress-value {
 
 /* Body background in iPhone mode */
 body.iphone-bg {
-    background-color: #888;
+    background-color: #1a1a1a;
     display: flex;
     justify-content: center;
     align-items: flex-start;
