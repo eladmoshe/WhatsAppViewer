@@ -587,12 +587,51 @@ function clearHighlights() {
 /* ===========================
    IPHONE MODE
    =========================== */
+function getVisibleCenterMessage() {
+    const container = document.getElementById('chatContainer');
+    const containerRect = container.getBoundingClientRect();
+    const centerY = containerRect.top + containerRect.height / 2;
+    const messages = container.querySelectorAll('.message');
+    let closest = null;
+    let closestDist = Infinity;
+    messages.forEach(msg => {
+        const rect = msg.getBoundingClientRect();
+        const msgCenter = rect.top + rect.height / 2;
+        const dist = Math.abs(msgCenter - centerY);
+        if (dist < closestDist) {
+            closestDist = dist;
+            closest = msg;
+        }
+    });
+    return closest;
+}
+
+function flashMessage(msgEl) {
+    const bubble = msgEl.querySelector('.bubble');
+    if (!bubble) return;
+    bubble.classList.remove('mode-switch-flash');
+    // Force reflow to restart animation
+    void bubble.offsetWidth;
+    bubble.classList.add('mode-switch-flash');
+    bubble.addEventListener('animationend', () => {
+        bubble.classList.remove('mode-switch-flash');
+    }, { once: true });
+}
+
 function toggleIphoneMode() {
     const appContainer = document.getElementById('appContainer');
     const iphoneHeader = document.getElementById('iphoneHeader');
     const iosInputBar = document.getElementById('iosInputBar');
     const exitBtn = document.getElementById('exitIphoneBtn');
     const isActive = appContainer.classList.contains('iphone-mode');
+
+    // Find the message currently at the center of the viewport
+    const anchorMsg = getVisibleCenterMessage();
+
+    // Flash before switching
+    if (anchorMsg) {
+        flashMessage(anchorMsg);
+    }
 
     if (isActive) {
         // Exit iPhone mode
@@ -629,6 +668,17 @@ function toggleIphoneMode() {
             hour: 'numeric',
             minute: '2-digit',
             hour12: false
+        });
+    }
+
+    // After layout settles, scroll to the anchor message and flash again
+    if (anchorMsg) {
+        // Wait for images to potentially resize and layout to reflow
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                anchorMsg.scrollIntoView({ block: 'center' });
+                flashMessage(anchorMsg);
+            });
         });
     }
 }
