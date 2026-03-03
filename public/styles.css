@@ -315,14 +315,20 @@ progress::-webkit-progress-value {
 }
 
 .bubble.mode-switch-flash {
-    animation: modeSwitchFlash 0.6s ease-in-out;
+    animation: modeSwitchFlash 1.5s ease-in-out;
+    z-index: 10;
+    position: relative;
 }
 
 @keyframes modeSwitchFlash {
-    0%   { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.5); }
-    30%  { box-shadow: 0 0 0 8px rgba(37, 211, 102, 0.3); }
-    60%  { box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.15); }
-    100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+    0%   { filter: brightness(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+    10%  { filter: brightness(0.7); box-shadow: 0 0 0 6px rgba(37, 211, 102, 0.5); }
+    25%  { filter: brightness(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+    40%  { filter: brightness(0.7); box-shadow: 0 0 0 6px rgba(37, 211, 102, 0.5); }
+    55%  { filter: brightness(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+    70%  { filter: brightness(0.7); box-shadow: 0 0 0 6px rgba(37, 211, 102, 0.5); }
+    85%  { filter: brightness(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+    100% { filter: brightness(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
 }
 
 .message.outgoing {
