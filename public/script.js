@@ -173,19 +173,23 @@ async function loadZipFile(event) {
         let chatFileContent = '';
         let totalFiles = Object.keys(contents.files).length;
         let processedFiles = 0;
+        const mediaExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.3gp', '.opus', '.ogg', '.m4a', '.pdf'];
+        const mediaLoadPromises = [];
 
         for (const [filename, zipEntry] of Object.entries(contents.files)) {
             if (filename.endsWith('.txt')) {
                 chatFileContent = await zipEntry.async('string');
-                break;
-            } else if (filename.endsWith('.jpg') || filename.endsWith('.png') || filename.endsWith('.gif')) {
-                loadImageInBackground(filename, zipEntry);
+            } else if (mediaExtensions.some(ext => filename.toLowerCase().endsWith(ext))) {
+                mediaLoadPromises.push(loadMediaFile(filename, zipEntry));
             }
             processedFiles++;
             const percent = Math.round((processedFiles / totalFiles) * 100);
             progressBar.value = percent;
             progressText.textContent = percent + '%';
         }
+
+        // Wait for all media files to load before rendering
+        await Promise.all(mediaLoadPromises);
 
         if (chatFileContent) {
             messages = parseMessages(chatFileContent);
@@ -208,12 +212,13 @@ async function loadZipFile(event) {
     }
 }
 
-function loadImageInBackground(filename, zipEntry) {
-    zipEntry.async('blob').then(blob => {
+async function loadMediaFile(filename, zipEntry) {
+    try {
+        const blob = await zipEntry.async('blob');
         mediaFiles[filename] = URL.createObjectURL(blob);
-    }).catch(error => {
+    } catch (error) {
         console.error("Error loading media file:", filename, error);
-    });
+    }
 }
 
 function parseMessages(text) {
@@ -411,13 +416,45 @@ function renderMessages() {
         }
 
         // Content
-        const mediaMatch = msg.content.match(/<attached: (.+)>/);
-        if (mediaMatch && mediaFiles[mediaMatch[1]]) {
-            const img = document.createElement('img');
-            img.src = mediaFiles[mediaMatch[1]];
-            img.alt = 'Attached media';
-            img.className = mediaMatch[1].endsWith('.webp') ? 'attached-sticker' : 'attached-image';
-            bubbleDiv.appendChild(img);
+        // Match <attached: filename> with optional invisible Unicode marks (LTR/RTL)
+        const mediaMatch = msg.content.match(/[\u200e\u200f]*<[\u200e\u200f]*attached: (.+?)>[\u200e\u200f]*/);
+        const mediaUrl = mediaMatch ? mediaFiles[mediaMatch[1]] : null;
+        if (mediaMatch && mediaUrl) {
+            const fname = mediaMatch[1].toLowerCase();
+            if (fname.endsWith('.mp4') || fname.endsWith('.3gp')) {
+                const video = document.createElement('video');
+                video.src = mediaUrl;
+                video.controls = true;
+                video.preload = 'metadata';
+                video.className = 'attached-video';
+                bubbleDiv.appendChild(video);
+            } else if (fname.endsWith('.opus') || fname.endsWith('.ogg') || fname.endsWith('.m4a')) {
+                const audio = document.createElement('audio');
+                audio.src = mediaUrl;
+                audio.controls = true;
+                audio.className = 'attached-audio';
+                bubbleDiv.appendChild(audio);
+            } else if (fname.endsWith('.webp')) {
+                const img = document.createElement('img');
+                img.src = mediaUrl;
+                img.alt = 'Sticker';
+                img.className = 'attached-sticker';
+                bubbleDiv.appendChild(img);
+            } else {
+                const img = document.createElement('img');
+                img.src = mediaUrl;
+                img.alt = 'Attached image';
+                img.className = 'attached-image';
+                bubbleDiv.appendChild(img);
+            }
+            // Show text content alongside media if there's more than just the attachment tag
+            const remainingText = msg.content.replace(/[\u200e\u200f]*<[\u200e\u200f]*attached: .+?>[\u200e\u200f]*/, '').trim();
+            if (remainingText) {
+                const contentSpan = document.createElement('span');
+                contentSpan.className = 'message-content';
+                contentSpan.innerHTML = renderContentWithLinks(remainingText);
+                bubbleDiv.appendChild(contentSpan);
+            }
         } else {
             const contentSpan = document.createElement('span');
             contentSpan.className = 'message-content';
