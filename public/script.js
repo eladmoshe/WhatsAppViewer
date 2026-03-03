@@ -628,58 +628,64 @@ function toggleIphoneMode() {
     // Find the message currently at the center of the viewport
     const anchorMsg = getVisibleCenterMessage();
 
-    // Flash before switching
-    if (anchorMsg) {
-        flashMessage(anchorMsg);
-    }
+    function doSwitch() {
+        if (isActive) {
+            // Exit iPhone mode
+            appContainer.classList.remove('iphone-mode');
+            document.body.classList.remove('iphone-bg');
+            iphoneHeader.style.display = 'none';
+            iosInputBar.style.display = 'none';
+            exitBtn.style.display = 'none';
+        } else {
+            // Enter iPhone mode
+            appContainer.classList.add('iphone-mode');
+            document.body.classList.add('iphone-bg');
+            iphoneHeader.style.display = 'block';
+            iosInputBar.style.display = 'flex';
+            exitBtn.style.display = 'flex';
 
-    if (isActive) {
-        // Exit iPhone mode
-        appContainer.classList.remove('iphone-mode');
-        document.body.classList.remove('iphone-bg');
-        iphoneHeader.style.display = 'none';
-        iosInputBar.style.display = 'none';
-        exitBtn.style.display = 'none';
-    } else {
-        // Enter iPhone mode
-        appContainer.classList.add('iphone-mode');
-        document.body.classList.add('iphone-bg');
-        iphoneHeader.style.display = 'block';
-        iosInputBar.style.display = 'flex';
-        exitBtn.style.display = 'flex';
+            // Close search if open
+            if (isSearchVisible) {
+                closeSearch();
+            }
 
-        // Close search if open
-        if (isSearchVisible) {
-            closeSearch();
+            // Set contact name from filename
+            const contactName = document.getElementById('iosContactName');
+            const contactAvatar = document.getElementById('iosContactAvatar');
+            contactName.textContent = chatFileName || 'Group Chat';
+
+            // Set avatar initial
+            const name = chatFileName || 'G';
+            contactAvatar.textContent = name[0].toUpperCase();
+
+            // Set current time in iOS format
+            const now = new Date();
+            document.getElementById('iosTime').textContent = now.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: false
+            });
         }
 
-        // Set contact name from filename
-        const contactName = document.getElementById('iosContactName');
-        const contactAvatar = document.getElementById('iosContactAvatar');
-        contactName.textContent = chatFileName || 'Group Chat';
-
-        // Set avatar initial
-        const name = chatFileName || 'G';
-        contactAvatar.textContent = name[0].toUpperCase();
-
-        // Set current time in iOS format
-        const now = new Date();
-        document.getElementById('iosTime').textContent = now.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: false
-        });
+        // After layout settles, scroll to the anchor and flash again
+        if (anchorMsg) {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    anchorMsg.scrollIntoView({ block: 'center' });
+                    flashMessage(anchorMsg);
+                });
+            });
+        }
     }
 
-    // After layout settles, scroll to the anchor message and flash again
+    // Flash anchor in current view, wait for it to finish, then switch
     if (anchorMsg) {
-        // Wait for images to potentially resize and layout to reflow
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                anchorMsg.scrollIntoView({ block: 'center' });
-                flashMessage(anchorMsg);
-            });
-        });
+        anchorMsg.scrollIntoView({ block: 'center' });
+        flashMessage(anchorMsg);
+        const bubble = anchorMsg.querySelector('.bubble');
+        bubble.addEventListener('animationend', doSwitch, { once: true });
+    } else {
+        doSwitch();
     }
 }
 
