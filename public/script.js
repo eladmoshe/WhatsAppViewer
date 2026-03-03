@@ -203,6 +203,7 @@ async function loadZipFile(event) {
         progressBarContainer.style.display = 'none';
     } catch (error) {
         console.error('Error processing zip file:', error);
+        document.getElementById('progressBarContainer').style.display = 'none';
         alert('Error loading ZIP file: ' + error.message);
     }
 }
@@ -459,16 +460,26 @@ function handleSearch() {
         return;
     }
 
-    const messageElements = document.querySelectorAll(".message[data-sender]");
+    const allBubbles = document.querySelectorAll(".bubble");
 
-    messageElements.forEach((msgEl) => {
-        const sender = msgEl.dataset.sender;
-        const bubble = msgEl.querySelector(".bubble");
-        if (!bubble) return;
+    allBubbles.forEach((bubble) => {
+        const msgEl = bubble.closest(".message");
+        const sender = msgEl ? msgEl.dataset.sender : null;
+        const isSystem = bubble.classList.contains("system");
 
+        // Author filter: system messages pass when no author filter is set
         const senderMatch = !hasAuthor || sender === authorFilter;
-        const textContent = bubble.textContent.toLowerCase();
-        const textMatch = !hasQuery || textContent.includes(searchQuery);
+
+        // Text match: for regular messages use .message-content only (excludes
+        // sender label and timestamp); for system messages use bubble text
+        let bodyText;
+        if (isSystem) {
+            bodyText = bubble.textContent.toLowerCase();
+        } else {
+            const contentEl = bubble.querySelector(".message-content");
+            bodyText = contentEl ? contentEl.textContent.toLowerCase() : '';
+        }
+        const textMatch = !hasQuery || bodyText.includes(searchQuery);
 
         if (senderMatch && textMatch) {
             bubble.classList.add("search-highlight");
@@ -588,11 +599,24 @@ function toggleIphoneMode() {
 /* ===========================
    UTILITIES
    =========================== */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 function renderContentWithLinks(content) {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return content.replace(urlRegex, (url) => {
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-    });
+    // Split on URLs, escape each non-URL part, then wrap URLs in anchor tags
+    const parts = content.split(urlRegex);
+    return parts.map((part, i) => {
+        if (i % 2 === 1) {
+            // This is a URL match - escape the display text and sanitize the href
+            const escaped = escapeHtml(part);
+            return `<a href="${escaped}" target="_blank" rel="noopener noreferrer">${escaped}</a>`;
+        }
+        return escapeHtml(part);
+    }).join('');
 }
 
 window.loadZipFile = loadZipFile;
