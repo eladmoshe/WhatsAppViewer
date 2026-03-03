@@ -257,10 +257,16 @@ body {
     text-align: center;
 }
 
-.progress-text {
+.progress-label {
     margin-bottom: 12px;
     color: #41525d;
     font-weight: 500;
+}
+
+.progress-percentage {
+    margin-top: 4px;
+    color: #8696a0;
+    font-size: 0.85em;
 }
 
 progress {
