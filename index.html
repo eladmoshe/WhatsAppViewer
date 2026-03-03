@@ -3,18 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>צופה שיחות וואטסאפ</title>
+    <title>WhatsApp Chat Viewer</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="header">
-        <h1>צופה שיחות וואטסאפ</h1>
+    <div class="app-container" id="appContainer">
+        <!-- Desktop Header -->
+        <header class="chat-header" id="desktopHeader">
+            <div class="chat-header-content">
+                <div class="chat-info">
+                    <i class="fas fa-arrow-right back-button"></i>
+                    <div class="chat-title">WhatsApp Chat Viewer</div>
+                </div>
+                <div class="chat-actions">
+                    <i class="fas fa-mobile-alt iphone-toggle" id="iphoneToggle" title="iPhone Screenshot Mode" style="display:none;"></i>
+                    <i class="fas fa-search search-toggle"></i>
+                    <i class="fas fa-ellipsis-v"></i>
+                </div>
+            </div>
+            <!-- Search Bar (hidden by default) -->
+            <div class="search-bar" id="searchBar" style="display: none;">
+                <div class="search-row">
+                    <i class="fas fa-arrow-right search-back"></i>
+                    <input type="text" id="searchQuery" placeholder="&#x202B;חפש בצ'אט">
+                    <select id="authorFilter">
+                        <option value="">כל המשתתפים</option>
+                    </select>
+                </div>
+                <div class="search-nav-row" id="searchNavRow" style="display:none;">
+                    <span class="search-counter" id="searchCounter"></span>
+                    <div class="search-nav-buttons">
+                        <button class="search-nav-btn" id="searchPrev" title="Previous match (Shift+Enter)">
+                            <i class="fas fa-chevron-up"></i>
+                        </button>
+                        <button class="search-nav-btn" id="searchNext" title="Next match (Enter)">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- iPhone Mode Header (hidden by default) -->
+        <header class="iphone-header" id="iphoneHeader" style="display:none;">
+            <div class="ios-status-bar">
+                <span class="ios-time" id="iosTime">9:41</span>
+                <div class="ios-status-icons">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-full"></i>
+                </div>
+            </div>
+            <div class="ios-nav-bar">
+                <div class="ios-nav-left">
+                    <i class="fas fa-chevron-left"></i>
+                    <span class="ios-back-count">3</span>
+                </div>
+                <div class="ios-nav-center">
+                    <div class="ios-contact-avatar" id="iosContactAvatar">G</div>
+                    <span class="ios-contact-name" id="iosContactName">Group Chat</span>
+                </div>
+                <div class="ios-nav-right">
+                    <i class="fas fa-video"></i>
+                    <i class="fas fa-phone"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- File Upload Area -->
+        <div class="file-upload-area" id="fileUploadArea">
+            <div class="upload-content">
+                <div class="upload-icon-wrapper">
+                    <i class="fas fa-file-archive"></i>
+                </div>
+                <h2>העלה קובץ ZIP של וואטסאפ</h2>
+                <p>גרור לכאן או לחץ לבחירת קובץ</p>
+                <div class="upload-hint">
+                    <i class="fas fa-info-circle"></i>
+                    <span>WhatsApp &gt; Chat &gt; Export Chat</span>
+                </div>
+                <input type="file" id="zipFile" accept=".zip" class="file-input">
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div id="progressBarContainer" class="progress-container" style="display: none;">
+            <div class="progress-content">
+                <div class="progress-text">טוען שיחה...</div>
+                <progress id="progressBar" value="0" max="100"></progress>
+                <div id="progressText" class="progress-percentage">0%</div>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container" id="chatContainer"></div>
+
+        <!-- iPhone Mode Input Bar (hidden by default) -->
+        <div class="ios-input-bar" id="iosInputBar" style="display:none;">
+            <i class="fas fa-plus"></i>
+            <div class="ios-text-field">הקלד הודעה</div>
+            <div class="ios-input-actions">
+                <i class="fas fa-camera"></i>
+                <i class="fas fa-microphone"></i>
+            </div>
+        </div>
+
+        <!-- Exit iPhone Mode Button -->
+        <button class="exit-iphone-btn" id="exitIphoneBtn" style="display:none;" title="Exit iPhone Mode">
+            <i class="fas fa-times"></i> Exit iPhone Mode
+        </button>
+
+        <!-- Floating Action Buttons -->
+        <div class="scroll-buttons">
+            <button id="scrollToTop" class="scroll-button" title="Scroll to Top">
+                <i class="fas fa-chevron-up"></i>
+            </button>
+            <button id="scrollToBottom" class="scroll-button" title="Scroll to Bottom">
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
     </div>
-    <div class="search">
-        <input type="text" id="searchQuery" placeholder="חפש הודעה">
-        <button onclick="handleSearch()">חפש</button>
-    </div>
-    <div class="chat-container" id="chatContainer"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
