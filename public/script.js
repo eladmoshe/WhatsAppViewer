@@ -139,6 +139,28 @@ function setupDragAndDrop() {
     }, false);
 }
 
+// Yield to the browser so UI updates (progress label/bar) actually paint
+function yieldToUI() {
+    return new Promise(resolve => setTimeout(resolve, 0));
+}
+
+async function updateProgress(label, percent) {
+    const progressLabel = document.getElementById('progressLabel');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    progressLabel.textContent = label;
+    if (percent !== undefined) {
+        progressBar.value = percent;
+        progressText.textContent = percent + '%';
+        progressBar.style.display = '';
+        progressText.style.display = '';
+    } else {
+        // Indeterminate mode — hide bar, just show label
+        progressBar.style.display = 'none';
+        progressText.style.display = 'none';
+    }
+}
+
 async function loadZipFile(event) {
     const file = event.target.files[0];
     if (!file) {
@@ -148,7 +170,6 @@ async function loadZipFile(event) {
 
     // Extract chat name from filename
     chatFileName = file.name.replace('.zip', '');
-    // WhatsApp exports: "WhatsApp Chat with Name.zip" or "WhatsApp Chat - Name.zip"
     const chatNameMatch = chatFileName.match(/WhatsApp Chat (?:with |[-–] )(.+)/i);
     if (chatNameMatch) {
         chatFileName = chatNameMatch[1].trim();
@@ -156,22 +177,24 @@ async function loadZipFile(event) {
 
     try {
         const zip = new JSZip();
-
         const progressBarContainer = document.getElementById('progressBarContainer');
-        const progressBar = document.getElementById('progressBar');
-        const progressText = document.getElementById('progressText');
         progressBarContainer.style.display = 'block';
 
+        // Phase 1: Reading ZIP file
+        await updateProgress('...קורא קובץ ZIP', 0);
         const contents = await zip.loadAsync(file, {
             onprogress: (metadata) => {
                 const percent = Math.round(metadata.percent);
-                progressBar.value = percent;
-                progressText.textContent = percent + '%';
+                updateProgress('...קורא קובץ ZIP', percent);
             }
         });
 
+        // Phase 2: Extracting files
+        await updateProgress('...מחלץ קבצים', 0);
+        await yieldToUI();
+
         let chatFileContent = '';
-        let totalFiles = Object.keys(contents.files).length;
+        const totalFiles = Object.keys(contents.files).length;
         let processedFiles = 0;
         const mediaExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.3gp', '.opus', '.ogg', '.m4a', '.pdf'];
         const mediaLoadPromises = [];
@@ -184,25 +207,44 @@ async function loadZipFile(event) {
             }
             processedFiles++;
             const percent = Math.round((processedFiles / totalFiles) * 100);
-            progressBar.value = percent;
-            progressText.textContent = percent + '%';
+            await updateProgress('...מחלץ קבצים', percent);
         }
 
-        // Wait for all media files to load before rendering
-        await Promise.all(mediaLoadPromises);
+        // Phase 3: Loading media
+        if (mediaLoadPromises.length > 0) {
+            let loadedMedia = 0;
+            const totalMedia = mediaLoadPromises.length;
+            await updateProgress(`...טוען מדיה (0/${totalMedia})`, 0);
+            await yieldToUI();
 
-        if (chatFileContent) {
-            messages = parseMessages(chatFileContent);
-            renderMessages();
-            populateAuthorFilter();
+            const trackedPromises = mediaLoadPromises.map(p =>
+                p.then(() => {
+                    loadedMedia++;
+                    const percent = Math.round((loadedMedia / totalMedia) * 100);
+                    updateProgress(`(${loadedMedia}/${totalMedia}) ...טוען מדיה`, percent);
+                })
+            );
+            await Promise.all(trackedPromises);
+        }
 
-            document.getElementById('fileUploadArea').style.display = 'none';
-            document.getElementById('chatContainer').style.display = 'block';
-            // Show iPhone toggle now that we have messages
-            document.getElementById('iphoneToggle').style.display = '';
-        } else {
+        if (!chatFileContent) {
             throw new Error('No text file found in the zip');
         }
+
+        // Phase 4: Parsing messages
+        await updateProgress('...מעבד הודעות');
+        await yieldToUI();
+        messages = parseMessages(chatFileContent);
+
+        // Phase 5: Rendering
+        await updateProgress(`...מציג ${messages.length.toLocaleString()} הודעות`);
+        await yieldToUI();
+        renderMessages();
+        populateAuthorFilter();
+
+        document.getElementById('fileUploadArea').style.display = 'none';
+        document.getElementById('chatContainer').style.display = 'block';
+        document.getElementById('iphoneToggle').style.display = '';
 
         progressBarContainer.style.display = 'none';
     } catch (error) {
