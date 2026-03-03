@@ -494,6 +494,8 @@ progress::-webkit-progress-value {
     bottom: 4px;
     left: 6px;
     white-space: nowrap;
+    direction: ltr;
+    unicode-bidi: isolate;
 }
 
 .time-spacer {
