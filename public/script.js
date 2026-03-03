@@ -275,18 +275,25 @@ function parseMessages(text) {
     let isLegacyFormat = null;
 
     const newFormatRegex = /\[(\d{1,2}\/\d{1,2}\/\d{4},\s\d{1,2}:\d{2}:\d{2})\]\s(.*?):\s(.*)/;
-    const legacyFormatRegex = /(\d{1,2}\/\d{1,2}\/\d{2,4},\s\d{1,2}:\d{2}(?::\d{2})?)\s-\s(.*?):\s(.*)/;
+    const legacyFormatRegex = /(\d{1,2}\/\d{1,2}\/\d{2,4},\s\d{1,2}:\d{2}(?::\d{2})?(?:\s[APap][Mm])?)\s-\s(.*?):\s(.*)/;
 
     function parseDate(dateString, isLegacy) {
         const [datePart, timePart] = dateString.split(', ');
         let [day, month, year] = datePart.split('/');
-        const [hour, minute, second] = timePart.split(':');
+        const timeClean = timePart.replace(/\s*[APap][Mm]\s*$/, '');
+        const isAM = /\bAM\b/i.test(timePart);
+        const isPM = /\bPM\b/i.test(timePart);
+        let [hour, minute, second] = timeClean.split(':');
+        hour = parseInt(hour, 10);
+
+        if (isPM && hour !== 12) hour += 12;
+        if (isAM && hour === 12) hour = 0;
 
         if (isLegacy && year.length === 2) {
             year = '20' + year;
         }
 
-        return new Date(year, month - 1, day, hour, minute, second || 0);
+        return new Date(year, month - 1, day, hour, parseInt(minute, 10), parseInt(second, 10) || 0);
     }
 
     function parseLineWithRegex(line, regex, isLegacy) {
