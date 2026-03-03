@@ -853,7 +853,6 @@ progress::-webkit-progress-value {
 /* iPhone dark mode bubbles */
 .app-container.iphone-mode .bubble {
     border-radius: 7.5px;
-    padding: 6px 7px 6px 6px;
 }
 
 .app-container.iphone-mode .bubble.outgoing {
